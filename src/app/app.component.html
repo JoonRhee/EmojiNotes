@@ -1,0 +1,146 @@
+
+<body class="mat-app-background">
+    <!-- Title -->
+    <div class = "title" fxLayout = "row" fxLayoutAlign="space-between center">
+        <mat-label>📓EmojiNotes</mat-label>
+        <button mat-mini-fab
+        (click) = "isDark = !isDark">
+            <mat-icon>{{isDark ? "light_mode" : "dark_mode"}}</mat-icon>
+        </button>
+    </div>
+    <mat-divider></mat-divider>
+
+    
+
+    <!-- Emoji Filter -->
+    <div>
+      <div @fade class="filter" fxLayout = "row" fxLayoutAlign="center center">
+        <button mat-mini-fab
+        (click)="filterToggled = !filterToggled"
+        [(emojiPickerIf)]="filterToggled"
+        [emojiPickerDirection]="'bottom' || 'top' || 'left' || 'right'"
+        (emojiPickerSelect)="handleEmojiFilter($event)">
+        {{emojiFilter}}
+        </button>
+        <button mat-button (click)="emojiFilter = '';applyFilter();">
+          Remove Filter
+        </button>
+      </div>
+      <mat-divider @fade></mat-divider>
+    </div>
+
+    <mat-progress-bar *ngIf="loading"mode="indeterminate"></mat-progress-bar>
+
+    <!-- Cards -->
+    <div #posts fxLayout="row wrap">
+        <!-- Input Card -->
+        <div fxFlex="25%" fxFlex.xs="100%" fxFlex.sm="33%">
+          <mat-card id="input-card" @fade [style.border-color] = "currentUserColor">
+
+            <!-- Icon Selection -->
+            <button mat-mini-fab
+            (click)="toggled = !toggled"
+            [(emojiPickerIf)]="toggled"
+            [emojiPickerDirection]="'bottom' || 'top' || 'left' || 'right'"
+            (emojiPickerSelect)="handleEmojiSelection($event)">
+            {{selected}}
+            </button>
+
+            <!-- Title Input -->
+            <mat-card-title>
+              <mat-form-field appearance="standard">
+                <mat-label>Title</mat-label>
+                <input matInput [formControl]="titleControl">
+              </mat-form-field>
+            </mat-card-title>
+
+            <!-- Media Input -->
+            <mat-card-subtitle fxLayout="column">
+              <mat-form-field appearance="standard">
+                <mat-label>Image/Youtube/URL</mat-label>
+                <input matInput [formControl]="mediaControl">
+              </mat-form-field>
+            </mat-card-subtitle>
+      
+            <!-- Content Input -->
+            <mat-card-content>
+              <mat-form-field appearance="fill">
+                <mat-label>Content</mat-label>
+                <textarea matInput [formControl]="contentControl"></textarea>
+              </mat-form-field>
+            </mat-card-content>
+
+            <!-- Exp.Date Picker -->
+            <mat-form-field appearance="fill">
+              <mat-label>Expiration Date</mat-label>
+              <input matInput [min]="minDate" [matDatepicker]="picker" [formControl]="expDateControl">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <!-- Add Button -->
+            <mat-card-actions align="end">
+              <button mat-mini-fab
+              (click) = "handleSubmission()">
+                <mat-icon>add</mat-icon>
+              </button>
+            </mat-card-actions>
+
+          </mat-card>
+        </div>
+      
+        <!-- Post Cards -->
+        <div 
+          fxFlex="25%" 
+          fxFlex.xs="100%" 
+          fxFlex.sm="33%"
+          *ngFor="let post of filteredPosts; let i = index" [attr.data-index]="i">
+
+          <mat-card @fade [style.border-color] = "post.color">
+            <mat-card-title fxLayoutAlign="right start">
+              <div class="filter-wrap">
+                <button mat-mini-fab
+                (click)="handleEmojiFilter({'char':post.emoji,label:''})">
+                  {{post.emoji}}
+                </button>
+              </div>
+              <mat-label>{{post.title}}</mat-label>
+            </mat-card-title>
+            <mat-card-subtitle fxLayout="row wrap" fxLayoutAlign="space-between center">
+              <mat-label>{{UTCtoString(post.postDate)}}</mat-label>
+            </mat-card-subtitle>
+
+            <!-- Media -->
+            <img mat-card-image *ngIf="post.mediaType=='Image'" src={{post.mediaSource}}>
+            <youtube-player 
+              *ngIf="post.mediaType=='Youtube'" 
+              fxLayout="row" 
+              fxLayoutAlign="center center" 
+              [width] ="youtubeWidth" 
+              [height] = "youtubeHeight" 
+              videoId={{post.mediaSource}}>
+            </youtube-player>
+            <a class="link-button" 
+              *ngIf="post.mediaType=='Link'" 
+              mat-stroked-button 
+              href={{post.mediaSource}} 
+              target="_blank">
+              <mat-icon>open_in_new</mat-icon>
+            </a>
+
+            <mat-card-content>{{post.content}}</mat-card-content>
+            
+            <mat-card-actions fxLayout="row" fxLayoutAlign="space-between center">
+              <mat-card-subtitle>
+                {{post.expDate === 0 ? "": "⌛ "+UTCtoString(post.expDate)}}
+              </mat-card-subtitle>
+              <button mat-mini-fab
+              (click) = "handleRemove(i)">
+                <mat-icon>remove</mat-icon>
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+    </div>
+
+</body>
